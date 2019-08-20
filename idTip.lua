@@ -164,7 +164,22 @@ if not isClassicWow then
     -- addLine(self, spellID, kinds.spell)
   -- end)
 end
--- NPCs
+-- NPCs https://wowwiki.fandom.com/wiki/API_UnitGUID
+-- 0xAABCCCDDDDEEEEEE
+-- AA 1-2
+-- unknown; Possible battlegroup identifier when used for players.
+-- B 3 
+-- unit type, mask with 0x7 to get: 0 for players, 1 for world objects, 3 for NPCs, 4 for permanent pets (including Water Elemental), 5 for vehicles. Temporary pets (Treants, Spirit Wolves, Mirror Images, and Ghouls) are considered NPCs (3), even if talents or glyphs prevent them from expiring.
+-- CCC 456
+-- If the unit is a pet, CCCDDDD forms a unique ID for the pet based on creation order; if a world object, CCCDDDD is the object ID; otherwise unknown.
+-- DDDD 7-10
+-- If the unit is an NPC, this is the hexadecimal representation of the NPC id.
+-- EEEEEE 11-16
+-- If the unit is a player, this is a unique identifier based on creation order. Otherwise, this is a spawn counter based on spawn order.
+-- (For players it can be 7 digits long, so that its DEEEEEE)
+
+
+
 GameTooltip:HookScript("OnTooltipSetUnit", function(self)
   if not isClassicWow then
     -- if C_PetBattles.IsInBattle() then return end
@@ -172,8 +187,17 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
   local unit = select(2, self:GetUnit())
   if unit then
     local guid = UnitGUID(unit) or ""
-    local id = tonumber(guid:match("-(%d+)-%x+$"), 10)
-    if id and guid:match("%a+") ~= "Player" then addLine(GameTooltip, id, kinds.unit) end
+	-- local id = tonumber(guid:match("-(%d+)-%x+$"), 10)
+    -- if id and guid:match("%a+") ~= "Player" then addLine(GameTooltip, id, kinds.unit) end
+	
+	local B = tonumber(guid:sub(5,5), 16);
+	local maskedB = B % 8; -- x % 8 has the same effect as x & 0x7 on numbers <= 0xf
+    local knownTypes = {[0]="player", [3]="NPC", [4]="pet", [5]="vehicle"};
+	
+	local entry = tonumber(guid:sub(9,12), 16);
+    local spawnguid = tonumber(guid:sub(13,18), 16);
+	addLine(GameTooltip, "entry:" .. entry .. "-guid:" .. spawnguid .. "-type:" .. (knownTypes[maskedB] or " unknown entity!"), kinds.unit)
+
   end
 end)
 
