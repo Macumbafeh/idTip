@@ -67,8 +67,8 @@ local function addLineByKind(self, id, kind)
     addLine(self, id, kinds.talent)
   elseif kind == "quest" then
     addLine(self, id, kinds.quest)
-  elseif kind == "achievement" then
-    addLine(self, id, kinds.achievement)
+  -- elseif kind == "achievement" then
+    -- addLine(self, id, kinds.achievement)
   elseif kind == "item" then
     addLine(self, id, kinds.item)
   elseif kind == "currency" then
@@ -111,14 +111,14 @@ hooksecurefunc(GameTooltip, "SetUnitDebuff", function(self, ...)
   addLine(self, id, kinds.spell)
 end)
 
-hooksecurefunc(GameTooltip, "SetUnitAura", function(self, ...)
-  local id = select(10, UnitAura(...))
-  addLine(self, id, kinds.spell)
-end)
+-- hooksecurefunc(GameTooltip, "SetUnitAura", function(self, ...)
+  -- local id = select(10, UnitAura(...))
+  -- addLine(self, id, kinds.spell)
+-- end)
 
-hooksecurefunc(GameTooltip, "SetSpellByID", function(self, id)
-  addLineByKind(self, id, kinds.spell)
-end)
+-- hooksecurefunc(GameTooltip, "SetSpellByID", function(self, id)
+  -- addLineByKind(self, id, kinds.spell)
+-- end)
 
 hooksecurefunc("SetItemRef", function(link, ...)
   local id = tonumber(link:match("spell:(%d+)"))
@@ -130,27 +130,27 @@ GameTooltip:HookScript("OnTooltipSetSpell", function(self)
   addLine(self, id, kinds.spell)
 end)
 
-hooksecurefunc("SpellButton_OnEnter", function(self)
-  local slot = SpellBook_GetSpellBookSlot(self)
-  local spellID = select(2, GetSpellBookItemInfo(slot, SpellBookFrame.bookType))
-  addLine(GameTooltip, spellID, kinds.spell)
-end)
+-- hooksecurefunc("SpellButton_OnEnter", function(self)
+  -- local slot = SpellBook_GetSpellBookSlot(self)
+  -- local spellID = select(2, GetSpellBookItemInfo(slot, SpellBookFrame.bookType))
+  -- addLine(GameTooltip, spellID, kinds.spell)
+-- end)
 
 if not isClassicWow then
-  hooksecurefunc(GameTooltip, "SetRecipeResultItem", function(self, id)
-    addLine(self, id, kinds.spell)
-  end)
+  -- hooksecurefunc(GameTooltip, "SetRecipeResultItem", function(self, id)
+    -- addLine(self, id, kinds.spell)
+  -- end)
 
-  hooksecurefunc(GameTooltip, "SetRecipeRankInfo", function(self, id)
-    addLine(self, id, kinds.spell)
-  end)
+  -- hooksecurefunc(GameTooltip, "SetRecipeRankInfo", function(self, id)
+    -- addLine(self, id, kinds.spell)
+  -- end)
 
-  -- Artifact Powers
-  hooksecurefunc(GameTooltip, "SetArtifactPowerByID", function(self, powerID)
-    local powerInfo = C_ArtifactUI.GetPowerInfo(powerID)
-    addLine(self, powerID, kinds.artifactpower)
-    addLine(self, powerInfo.spellID, kinds.spell)
-  end)
+  -- -- Artifact Powers
+  -- hooksecurefunc(GameTooltip, "SetArtifactPowerByID", function(self, powerID)
+    -- local powerInfo = C_ArtifactUI.GetPowerInfo(powerID)
+    -- addLine(self, powerID, kinds.artifactpower)
+    -- addLine(self, powerInfo.spellID, kinds.spell)
+  -- end)
 
   -- Talents
   hooksecurefunc(GameTooltip, "SetTalent", function(self, id)
@@ -158,35 +158,59 @@ if not isClassicWow then
     addLine(self, id, kinds.talent)
     addLine(self, spellID, kinds.spell)
   end)
-  hooksecurefunc(GameTooltip, "SetPvpTalent", function(self, id)
-    local spellID = select(6, GetPvpTalentInfoByID(id))
-    addLine(self, id, kinds.talent)
-    addLine(self, spellID, kinds.spell)
-  end)
+  -- hooksecurefunc(GameTooltip, "SetPvpTalent", function(self, id)
+    -- local spellID = select(6, GetPvpTalentInfoByID(id))
+    -- addLine(self, id, kinds.talent)
+    -- addLine(self, spellID, kinds.spell)
+  -- end)
 end
--- NPCs
+-- NPCs https://wowwiki.fandom.com/wiki/API_UnitGUID
+-- 0xAABCCCDDDDEEEEEE
+-- AA 1-2
+-- unknown; Possible battlegroup identifier when used for players.
+-- B 3 
+-- unit type, mask with 0x7 to get: 0 for players, 1 for world objects, 3 for NPCs, 4 for permanent pets (including Water Elemental), 5 for vehicles. Temporary pets (Treants, Spirit Wolves, Mirror Images, and Ghouls) are considered NPCs (3), even if talents or glyphs prevent them from expiring.
+-- CCC 456
+-- If the unit is a pet, CCCDDDD forms a unique ID for the pet based on creation order; if a world object, CCCDDDD is the object ID; otherwise unknown.
+-- DDDD 7-10
+-- If the unit is an NPC, this is the hexadecimal representation of the NPC id.
+-- EEEEEE 11-16
+-- If the unit is a player, this is a unique identifier based on creation order. Otherwise, this is a spawn counter based on spawn order.
+-- (For players it can be 7 digits long, so that its DEEEEEE)
+
+
+
 GameTooltip:HookScript("OnTooltipSetUnit", function(self)
   if not isClassicWow then
-    if C_PetBattles.IsInBattle() then return end
+    -- if C_PetBattles.IsInBattle() then return end
   end
   local unit = select(2, self:GetUnit())
   if unit then
     local guid = UnitGUID(unit) or ""
-    local id = tonumber(guid:match("-(%d+)-%x+$"), 10)
-    if id and guid:match("%a+") ~= "Player" then addLine(GameTooltip, id, kinds.unit) end
+	-- local id = tonumber(guid:match("-(%d+)-%x+$"), 10)
+    -- if id and guid:match("%a+") ~= "Player" then addLine(GameTooltip, id, kinds.unit) end
+	
+	local B = tonumber(guid:sub(5,5), 16);
+	local maskedB = B % 8; -- x % 8 has the same effect as x & 0x7 on numbers <= 0xf
+    local knownTypes = {[0]="player", [3]="NPC", [4]="pet", [5]="vehicle"};
+	
+	local entry = tonumber(guid:sub(9,12), 16);
+    local spawnguid = tonumber(guid:sub(13,18), 16);
+	addLine(GameTooltip, "entry:" .. entry .. "-guid:" .. spawnguid .. "-type:" .. (knownTypes[maskedB] or " unknown entity!"), kinds.unit)
+
   end
 end)
 
 -- Items
 
 if not isClassicWow then
-  hooksecurefunc(GameTooltip, "SetToyByItemID", function(self, id)
-    addLine(self, id, kinds.item)
-  end)
+  -- hooksecurefunc(GameTooltip, "SetToyByItemID", function(self, id)
+    -- addLine(self, id, kinds.item)
+  -- end)
 
-  hooksecurefunc(GameTooltip, "SetRecipeReagentItem", function(self, id)
-    addLine(self, id, kinds.item)
-  end)
+  -- hooksecurefunc(GameTooltip, "SetRecipeReagentItem", function(self, id)
+    -- addLine(self, id, kinds.item)
+  -- end)
 end
 
 local function attachItemTooltip(self)
@@ -210,9 +234,9 @@ local function attachItemTooltip(self)
     end
   end
 
-  for index = 1, tonumber(itemSplit[13]) do
-    bonuses[#bonuses + 1] = itemSplit[13 + index]
-  end
+  -- for index = 1, tonumber(itemSplit[13]) do
+    -- bonuses[#bonuses + 1] = itemSplit[13 + index]
+  -- end
 
   local gems = {}
   if not isClassicWow then
@@ -250,8 +274,8 @@ end
 
 GameTooltip:HookScript("OnTooltipSetItem", attachItemTooltip)
 ItemRefTooltip:HookScript("OnTooltipSetItem", attachItemTooltip)
-ItemRefShoppingTooltip1:HookScript("OnTooltipSetItem", attachItemTooltip)
-ItemRefShoppingTooltip2:HookScript("OnTooltipSetItem", attachItemTooltip)
+-- ItemRefShoppingTooltip1:HookScript("OnTooltipSetItem", attachItemTooltip)
+-- ItemRefShoppingTooltip2:HookScript("OnTooltipSetItem", attachItemTooltip)
 ShoppingTooltip1:HookScript("OnTooltipSetItem", attachItemTooltip)
 ShoppingTooltip2:HookScript("OnTooltipSetItem", attachItemTooltip)
 
@@ -314,49 +338,49 @@ f:SetScript("OnEvent", function(_, _, what)
 end)
 
 if not isClassicWow then
-  -- Pet battle buttons
-  hooksecurefunc("PetBattleAbilityButton_OnEnter", function(self)
-    local petIndex = C_PetBattles.GetActivePet(LE_BATTLE_PET_ALLY)
-    if self:GetEffectiveAlpha() > 0 then
-      local id = select(1, C_PetBattles.GetAbilityInfo(LE_BATTLE_PET_ALLY, petIndex, self:GetID()))
-      if id then
-        local oldText = PetBattlePrimaryAbilityTooltip.Description:GetText(id)
-        PetBattlePrimaryAbilityTooltip.Description:SetText(oldText .. "\r\r" .. kinds.ability .. "|cffffffff " .. id .. "|r")
-      end
-    end
-  end)
+  -- -- Pet battle buttons
+  -- hooksecurefunc("PetBattleAbilityButton_OnEnter", function(self)
+    -- local petIndex = C_PetBattles.GetActivePet(LE_BATTLE_PET_ALLY)
+    -- if self:GetEffectiveAlpha() > 0 then
+      -- local id = select(1, C_PetBattles.GetAbilityInfo(LE_BATTLE_PET_ALLY, petIndex, self:GetID()))
+      -- if id then
+        -- local oldText = PetBattlePrimaryAbilityTooltip.Description:GetText(id)
+        -- PetBattlePrimaryAbilityTooltip.Description:SetText(oldText .. "\r\r" .. kinds.ability .. "|cffffffff " .. id .. "|r")
+      -- end
+    -- end
+  -- end)
 
-  -- Pet battle auras
-  hooksecurefunc("PetBattleAura_OnEnter", function(self)
-    local parent = self:GetParent()
-    local id = select(1, C_PetBattles.GetAuraInfo(parent.petOwner, parent.petIndex, self.auraIndex))
-    if id then
-      local oldText = PetBattlePrimaryAbilityTooltip.Description:GetText(id)
-      PetBattlePrimaryAbilityTooltip.Description:SetText(oldText .. "\r\r" .. kinds.ability .. "|cffffffff " .. id .. "|r")
-    end
-  end)
+  -- -- Pet battle auras
+  -- hooksecurefunc("PetBattleAura_OnEnter", function(self)
+    -- local parent = self:GetParent()
+    -- local id = select(1, C_PetBattles.GetAuraInfo(parent.petOwner, parent.petIndex, self.auraIndex))
+    -- if id then
+      -- local oldText = PetBattlePrimaryAbilityTooltip.Description:GetText(id)
+      -- PetBattlePrimaryAbilityTooltip.Description:SetText(oldText .. "\r\r" .. kinds.ability .. "|cffffffff " .. id .. "|r")
+    -- end
+  -- end)
 
-  -- Currencies
-  hooksecurefunc(GameTooltip, "SetCurrencyToken", function(self, index)
-    local id = tonumber(string.match(GetCurrencyListLink(index),"currency:(%d+)"))
-    addLine(self, id, kinds.currency)
-  end)
+  -- -- Currencies
+  -- hooksecurefunc(GameTooltip, "SetCurrencyToken", function(self, index)
+    -- local id = tonumber(string.match(GetCurrencyListLink(index),"currency:(%d+)"))
+    -- addLine(self, id, kinds.currency)
+  -- end)
 
-  hooksecurefunc(GameTooltip, "SetCurrencyByID", function(self, id)
-     addLine(self, id, kinds.currency)
-  end)
+  -- hooksecurefunc(GameTooltip, "SetCurrencyByID", function(self, id)
+     -- addLine(self, id, kinds.currency)
+  -- end)
 
-  hooksecurefunc(GameTooltip, "SetCurrencyTokenByID", function(self, id)
-     addLine(self, id, kinds.currency)
-  end)
+  -- hooksecurefunc(GameTooltip, "SetCurrencyTokenByID", function(self, id)
+     -- addLine(self, id, kinds.currency)
+  -- end)
 
   -- Quests
-  hooksecurefunc("QuestMapLogTitleButton_OnEnter", function(self)
-    local id = select(8, GetQuestLogTitle(self.questLogIndex))
-    addLine(GameTooltip, id, kinds.quest)
-  end)
+  -- hooksecurefunc("QuestMapLogTitleButton_OnEnter", function(self)
+    -- local id = select(8, GetQuestLogTitle(self.questLogIndex))
+    -- addLine(GameTooltip, id, kinds.quest)
+  -- end)
 
-  hooksecurefunc("TaskPOI_OnEnter", function(self)
-    if self and self.questID then addLine(GameTooltip, self.questID, kinds.quest) end
-  end)
+  -- hooksecurefunc("TaskPOI_OnEnter", function(self)
+    -- if self and self.questID then addLine(GameTooltip, self.questID, kinds.quest) end
+  -- end)
 end
