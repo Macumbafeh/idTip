@@ -153,11 +153,11 @@ if not isClassicWow then
   -- end)
 
   -- Talents
-  hooksecurefunc(GameTooltip, "SetTalent", function(self, id)
-    local spellID = select(6, GetTalentInfoByID(id))
-    addLine(self, id, kinds.talent)
-    addLine(self, spellID, kinds.spell)
-  end)
+  -- hooksecurefunc(GameTooltip, "SetTalent", function(self, id)
+  --  local spellID = select(6, GetTalentInfoByID(id))
+  --  addLine(self, id, kinds.talent)
+  --  addLine(self, spellID, kinds.spell)
+  -- end)
   -- hooksecurefunc(GameTooltip, "SetPvpTalent", function(self, id)
     -- local spellID = select(6, GetPvpTalentInfoByID(id))
     -- addLine(self, id, kinds.talent)
