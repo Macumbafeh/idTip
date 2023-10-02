@@ -257,12 +257,17 @@ local _, _, enchantID, gem1, gem2, gem3 = string.find(link, "item:%d+:(%d+):(%d*
   local gems = {gem1, gem2, gem3}
   
   -- Debugging
-  DEFAULT_CHAT_FRAME:AddMessage("Gem IDs: " .. (gem1 or "No Gem1") .. ", " .. (gem2 or "No Gem2") .. ", " .. (gem3 or "No Gem3"))
+  -- DEFAULT_CHAT_FRAME:AddMessage("Gem IDs: " .. (gem1 or "No Gem1") .. ", " .. (gem2 or "No Gem2") .. ", " .. (gem3 or "No Gem3"))
   
   for i, gemID in ipairs(gems) do
     if gemID and gemID ~= "0" then
       addLine(self, gemID, kinds.gem)
     end
+  end
+  
+   -- Debugging gem IDs when Alt key is pressed
+  if IsAltKeyDown() then
+    DEFAULT_CHAT_FRAME:AddMessage("Gem IDs: " .. (gem1 or "No Gem1") .. ", " .. (gem2 or "No Gem2") .. ", " .. (gem3 or "No Gem3"))
   end
 end
 
