@@ -219,13 +219,12 @@ local function attachItemTooltip(self)
 
   local itemString = string.match(link, "item:([%-?%d:]+)")
   if not itemString then return end
-
-  local enchantid = ""
+	
+   local enchantid = ""
   local bonusid = ""
   local gemid = ""
   local bonuses = {}
   local itemSplit = {}
-
   for v in string.gmatch(itemString, "(%d*:?)") do
     if v == ":" then
       itemSplit[#itemSplit + 1] = 0
@@ -234,22 +233,6 @@ local function attachItemTooltip(self)
     end
   end
 
-  -- for index = 1, tonumber(itemSplit[13]) do
-    -- bonuses[#bonuses + 1] = itemSplit[13 + index]
-  -- end
-
-  local gems = {}
-  if not isClassicWow then
-      for i=1, 4 do
-      local _,gemLink = GetItemGem(link, i)
-      if gemLink then
-        local gemDetail = string.match(gemLink, "item[%-?%d:]+")
-        gems[#gems + 1] = string.match(gemDetail, "item:(%d+):")
-      elseif flags == 256 then
-        gems[#gems + 1] = "0"
-      end
-    end
-  end
   local id = string.match(link, "item:(%d*)")
   if (id == "" or id == "0") and TradeSkillFrame ~= nil and TradeSkillFrame:IsVisible() and GetMouseFocus().reagentIndex then
     local selectedRecipe = TradeSkillFrame.RecipeList:GetSelectedRecipeID()
@@ -261,16 +244,28 @@ local function attachItemTooltip(self)
     end
   end
 
-  if id then
+  if id and id ~= "0" then
     addLine(self, id, kinds.item)
-    if itemSplit[2] ~= 0 then
-      enchantid = itemSplit[2]
-      addLine(self, enchantid, kinds.enchant)
+    if itemSplit[2] and itemSplit[2] ~= "0" then
+      addLine(self, itemSplit[2], kinds.enchant)
     end
-    if #bonuses ~= 0 then addLine(self, bonuses, kinds.bonus) end
-    if #gems ~= 0 then addLine(self, gems, kinds.gem) end
+  end
+
+  
+-- New code for showing gem IDs
+local _, _, enchantID, gem1, gem2, gem3 = string.find(link, "item:%d+:(%d+):(%d*):(%d*):(%d*)")
+  local gems = {gem1, gem2, gem3}
+  
+  -- Debugging
+  DEFAULT_CHAT_FRAME:AddMessage("Gem IDs: " .. (gem1 or "No Gem1") .. ", " .. (gem2 or "No Gem2") .. ", " .. (gem3 or "No Gem3"))
+  
+  for i, gemID in ipairs(gems) do
+    if gemID and gemID ~= "0" then
+      addLine(self, gemID, kinds.gem)
+    end
   end
 end
+
 
 GameTooltip:HookScript("OnTooltipSetItem", attachItemTooltip)
 ItemRefTooltip:HookScript("OnTooltipSetItem", attachItemTooltip)
